@@ -2,32 +2,35 @@
 Requirements:
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-- [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+- [Minikube](https://minikube.misigs.k8s.io/docs/start/)
+
+[https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)
+Invoke-WebRequest -OutFile 'c:\Program Files\Kubernetes\kubectl.exe' -Uri '[https://dl.k8s.io/release/v1.22.0/bin/windows/amd64/kubectl.exe](https://dl.k8s.io/release/v1.22.0/bin/windows/amd64/kubectl.exe)' -UseBasicParsing
+
+[https://minikube.sigs.k8s.io/docs/start/](https://minikube.sigs.k8s.io/docs/start/)
+Invoke-WebRequest -OutFile 'c:\Program Files\Kubernetes\minikube.exe' -Uri 'https://github.com/kubernetes/minikube/releases/latest/download/minikube-windows-amd64.exe' -UseBasicParsing
 ## Verify kubectl installation
 ```bash
 kubectl version --client
 ```
 Output, that indicates that everything is working.
 ```bash
-Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.0", GitCommit:"9e991415386e4cf155a24b1da15becaa390438d8", GitTreeState:"clean", BuildDate:"2020-03-25T14:58:59Z", GoVersion:"go1.13.8", Compiler:"gc", Platform:"windows/amd64"}
-```
-
-## Setup autocomplete for kubectl
-```bash
-source <(kubectl completion bash) 
+Client Version: version.Info{Major:"1", Minor:"22", GitVersion:"v1.22.3", GitCommit:"c92036820499fedefec0f847e2054d824aea6cd1", GitTreeState:"clean", BuildDate:"2021-10-27T18:41:28Z", GoVersion:"go1.16.9", Compiler:"gc", Platform:"windows/amd64"}
 ```
 
 ```bash
 minikube start --driver=virtualbox
+🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
 ```
+
 ## Get information about cluster
 ```bash
 $ kubectl cluster-info
 ```
 Sample output, that indicates that everything is working.
 ```bash
-Kubernetes master is running at https://192.168.99.107:8443
-CoreDNS is running at https://192.168.99.107:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Kubernetes control plane is running at https://192.168.59.100:8443
+CoreDNS is running at https://192.168.59.100:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'
 ```
@@ -37,13 +40,13 @@ $ kubectl get nodes
 ```
 Sample output, that indicates that everything is working.
 ```bash
-NAME       STATUS   ROLES                  AGE     VERSION
-minikube   Ready    control-plane,master   9m52s   v1.22.2
+NAME       STATUS   ROLES                  AGE   VERSION
+minikube   Ready    control-plane,master   33m   v1.22.3
 ```
 
 # Install [Kubernetes Dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/)
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/aio/deploy/recommended.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml
 ```
 # Check kubernetes-dashboard ns
 ```bash
@@ -51,9 +54,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.3.1/a
 ```
 Sample output
 ```bash
-NAME                                         READY   STATUS    RESTARTS   AGE
-dashboard-metrics-scraper-5594697f48-ng9x6   1/1     Running   0          30m
-kubernetes-dashboard-57c9bfc8c8-qjt2s        1/1     Running   0          30m
+NAME                                        READY   STATUS    RESTARTS   AGE
+dashboard-metrics-scraper-c45b7869d-rfqqk   1/1     Running   0          66s
+kubernetes-dashboard-576cb95f94-4t52z       1/1     Running   0          66s
 ```
 # Install [Metrics Server](https://github.com/kubernetes-sigs/metrics-server#deployment)
 ```bash
@@ -83,7 +86,7 @@ spec:
 kubectl describe sa -n kube-system default
 # copy token name
 kubectl get secrets -n kube-system
-kubectl get secrets -n kube-system token_name_from_first_command -o yaml
+kubectl get secrets -n kube-system default-token-jntpl -o yaml
 echo -n "token_from_previous_step" | base64 -d
 ```
 # Same thing in one command
@@ -91,11 +94,14 @@ echo -n "token_from_previous_step" | base64 -d
  kubectl get secrets -n kube-system $(kubectl describe sa -n kube-system default|grep Tokens|awk '{print $2}') -o yaml|grep -E "^[[:space:]]*token:"|awk '{print $2}'|base64 -d
 ```
 
-### Auto
+### Auto (Powershell)
 ```bash
-export SECRET_NAME=$(kubectl get sa -n kube-system default -o jsonpath='{.secrets[0].name}')
-export TOKEN=$(kubectl get secrets -n kube-system $SECRET_NAME -o jsonpath='{.data.token}' | base64 -d)
-echo $TOKEN
+$SECRET_NAME=$(kubectl get sa -n kube-system default -o jsonpath='{.secrets[0].name}')
+$TOKEN=$(kubectl get secrets -n kube-system $SECRET_NAME -o jsonpath='{.data.token}')
+$DECR=[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("$TOKEN"))
+echo $DECR
+echo http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+kubectl proxy
 ```
 
 ## Connect to Dashboard
