@@ -140,6 +140,16 @@ https://kustomize.io/
 https://aws.amazon.com/ru/route53/
 https://operatorhub.io/
 https://ru.werf.io/
+https://www.devopsschool.com/blog/kubernetes-volume-emptydir-explained-with-examples/
+
+
+https://metallb.universe.tf/
+https://coredns.io/plugins/kubernetes/#autopath
+https://kubernetes.io/docs/concepts/services-networking/network-policies/
+https://cert-manager.io/docs/
+https://habr.com/ru/post/458462/
+
+
 ```
 
 
